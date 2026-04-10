@@ -1,0 +1,26 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+*.env
+
+# Logs
+*.log
+*.sqlite3
+
+# Git
+.git
+.gitignore
+
+# Node modules (if you have a frontend folder inside backend)
+
+
+# VSCode / editor files
+.vscode/
+*.swp
+*.swo
