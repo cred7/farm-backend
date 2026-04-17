@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
     'corsheaders',
     'rest_framework_simplejwt',
     'user',
@@ -69,6 +70,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8081",
+    "http://localhost:8000",
     "https://semivolatile-nancey-incongrously.ngrok-free.dev",
 
 ]
@@ -106,6 +108,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = "backend.asgi.application"
 
 # -----------------------------
 # Database
@@ -116,6 +119,8 @@ DATABASES = {
         'NAME': 'image',
         'USER': 'image',
         'PASSWORD': 'image',
+        # 'HOST': 'localhost',
+        # 'PORT': '5111',
         'HOST': 'postgres_image_db',
         'PORT': '5432',
     }
@@ -169,3 +174,22 @@ SIMPLE_JWT = {
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+# CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/1"
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/1"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}

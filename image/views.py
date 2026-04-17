@@ -1,3 +1,4 @@
+from .celery.tasks import analyze_farm_image_task
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
@@ -24,8 +25,11 @@ class FarmViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def area(self, request, pk=None):
         farm = get_object_or_404(Farm, pk=pk, farmer=request.user)
-
-        coords = [(p.latitude, p.longitude) for p in farm.points.all()]
+        print(
+            f"Calculating area for farm {farm.id} - {farm.name} with {farm.points.count()} points")
+        coords = [(p.latitude, p.longitude,) for p in farm.points.all()]
+        coord = [{"lat": p.latitude, "lng": p.longitude, "id": p.id}
+                 for p in farm.points.all()]
 
         if len(coords) < 3:
             return Response({"error": "Not enough points"}, status=400)
@@ -33,6 +37,7 @@ class FarmViewSet(viewsets.ModelViewSet):
         area_m2 = polygon_area_geodesic(coords)
 
         return Response({
+            "coords": coord,
             "area_m2": round(area_m2, 2),
             "hectares": round(area_m2 / 10000, 2),
             "acres": round(area_m2 / 4046.856, 2),
@@ -76,6 +81,7 @@ class FarmViewSet(viewsets.ModelViewSet):
             image=request.data.get("image"),
         )
 
+        analyze_farm_image_task.delay(history.id)
         return Response(
             FarmHistorySerializer(history, context={"request": request}).data
         )
@@ -102,6 +108,7 @@ class FarmViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["delete"])
     def delete_activity(self, request, pk=None):
+
         farm = get_object_or_404(Farm, pk=pk, farmer=request.user)
 
         activity = get_object_or_404(

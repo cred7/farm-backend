@@ -21,6 +21,8 @@ class FarmHistorySerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "image",
+            "status",
+            "ml_result",
         ]
 
     def get_image(self, obj):
