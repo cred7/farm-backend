@@ -14,44 +14,36 @@ import {
   TextInput,
   View,
 } from "react-native";
-const urls =
-  Platform.OS === "android"
-    ? "https://semivolatile-nancey-incongrously.ngrok-free.dev"
-    : "http://localhost:8000";
-const BACKEND_URL = urls + "/api/auth/";
-export default function SignUp() {
+import { apiFetch } from "../../services/fetch";
+
+export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSignUp = async () => {
+  const handleLogin = async () => {
     try {
-      const res = await fetch(BACKEND_URL + "register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, password }),
-      });
-
-      if (!res.ok) {
-        setMessage("Error creating account");
-        return;
-      }
-
-      // auto-login
-      const login = await fetch(BACKEND_URL + "login/", {
+      const res = await apiFetch("auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await login.json();
+
+      const data = await res.json();
       await AsyncStorage.setItem("accessToken", data.access);
       await AsyncStorage.setItem("refreshToken", data.refresh);
-
       router.replace("/createFarm");
     } catch (err) {
-      setMessage("Network error");
+      if (err instanceof Error) {
+        setMessage(
+          err.message.includes("Session expired")
+            ? "Session expired"
+            : "Invalid credentials",
+        );
+      } else {
+        setMessage("Network error");
+      }
     }
   };
 
@@ -63,20 +55,14 @@ export default function SignUp() {
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.container}>
-            <Text style={styles.title}>🌱 Create Your Account</Text>
+            <Text style={styles.title}>🌱 Login to Farm App</Text>
             <Text style={styles.subtitle}>
-              Sign up to manage your farms, track crops, and boost productivity.
+              Enter your credentials to access your farms and manage crops
+              efficiently.
             </Text>
 
-            {message && <Text style={styles.message}>{message}</Text>}
+            {message ? <Text style={styles.message}>{message}</Text> : null}
 
-            <TextInput
-              placeholder="Name"
-              placeholderTextColor="#9CA3AF"
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-            />
             <TextInput
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
@@ -86,6 +72,7 @@ export default function SignUp() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+
             <TextInput
               placeholder="Password"
               placeholderTextColor="#9CA3AF"
@@ -96,11 +83,11 @@ export default function SignUp() {
             />
 
             <View style={styles.buttonWrapper}>
-              <Button title="Sign Up" onPress={handleSignUp} color="#2196F3" />
+              <Button title="Login" onPress={handleLogin} color="#4CAF50" />
             </View>
 
             <Text style={styles.footer}>
-              Already have an account? Login to continue
+              Don't have an account? Sign up to get started
             </Text>
           </View>
         </ScrollView>
@@ -165,7 +152,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginVertical: 15,
     borderRadius: 8,
-    overflow: "hidden",
+    overflow: "hidden", // ensures Button respects border radius on Android
   },
   footer: {
     fontSize: 14,
